@@ -1,0 +1,10 @@
+*.bat
+/ARM/*.smp
+/ARM/*.so
+/ARM.out
+/ARM/Bridge.dll
+/X86/*.smp
+/X86/*.so
+/X86.out
+/X86/Bridge.dll
+

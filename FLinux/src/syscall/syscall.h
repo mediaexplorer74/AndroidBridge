@@ -1,0 +1,80 @@
+/*
+ * This file is part of Foreign Linux.
+ *
+ * Copyright (C) 2014, 2015 Xiangyan Sun <wishstudio@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#include <stdint.h>
+
+#define _MACROCALL()
+
+#define _SYSCALL_NARG(...) _SYSCALL_NARG_ _MACROCALL() (__VA_ARGS__, _SYSCALL_RSEQ_N())
+#define _SYSCALL_NARG_(...) _SYSCALL_ARG_N _MACROCALL() (__VA_ARGS__)
+#define _SYSCALL_ARG_N(_T1, _N1, _T2, _N2, _T3, _N3, _T4, _N4, _T5, _N5, _T6, _N6, _T7, _N7, _T8, _N8, _N, ...) _N
+#define _SYSCALL_RSEQ_N() \
+	_SYSCALL_MAP8, _SYSCALL_MAP8, \
+	_SYSCALL_MAP7, _SYSCALL_MAP7, \
+	_SYSCALL_MAP6, _SYSCALL_MAP6, \
+	_SYSCALL_MAP5, _SYSCALL_MAP5, \
+	_SYSCALL_MAP4, _SYSCALL_MAP4, \
+	_SYSCALL_MAP3, _SYSCALL_MAP3, \
+	_SYSCALL_MAP2, _SYSCALL_MAP2, \
+	_SYSCALL_MAP1, _SYSCALL_MAP0
+
+#define _SYSCALL_MAP0(f)
+#define _SYSCALL_MAP1(f, t, n, ...) f(t, n)
+#define _SYSCALL_MAP2(f, t, n, ...) f(t, n), _SYSCALL_MAP1 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP3(f, t, n, ...) f(t, n), _SYSCALL_MAP2 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP4(f, t, n, ...) f(t, n), _SYSCALL_MAP3 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP5(f, t, n, ...) f(t, n), _SYSCALL_MAP4 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP6(f, t, n, ...) f(t, n), _SYSCALL_MAP5 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP7(f, t, n, ...) f(t, n), _SYSCALL_MAP6 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP8(f, t, n, ...) f(t, n), _SYSCALL_MAP7 _MACROCALL() (f, __VA_ARGS__)
+#define _SYSCALL_MAP(f, ...) \
+	_SYSCALL_NARG _MACROCALL() (__VA_ARGS__) _MACROCALL() (f, __VA_ARGS__)
+
+#define _SYSCALL_WRAPPER(t, n) intptr_t n
+#define _SYSCALL_CALL(t, n) (t)n
+#define _SYSCALL_ACTUAL(t, n) t n
+
+#define MAX_ERRNO 4095  /* For recognizing system call error returns. */
+
+
+#define DEFINE_SYSCALL(name, ...) \
+	intptr_t sys_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_ACTUAL, __VA_ARGS__)); \
+	intptr_t _bionic_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_ACTUAL, __VA_ARGS__)) \
+	{ \
+		set_errno(0); \
+		intptr_t ret = sys_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_CALL, __VA_ARGS__)); \
+		if((unsigned long)ret >= (unsigned long)-MAX_ERRNO) \
+		{ \
+				log_error(#name " error: %d", ret); \
+				set_errno(-(ret)); \
+				return -1; \
+		} \
+		return ret; \
+	} \
+	static intptr_t _sys_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_WRAPPER, __VA_ARGS__)) \
+	{ \
+		return sys_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_CALL, __VA_ARGS__)); \
+	} \
+	intptr_t sys_##name(_SYSCALL_MAP _MACROCALL() (_SYSCALL_ACTUAL, __VA_ARGS__))
+
+void install_syscall_handler();
+extern void print_debug_info(PCONTEXT context);
+extern void print_stack_trace(void* sp, int max_records);
