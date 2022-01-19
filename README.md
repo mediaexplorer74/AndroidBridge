@@ -12,11 +12,12 @@ The main goal is run Android Runtime as an UWP app...
 - Android 7.1.1 r13 is used
 - Newest Visual Studio 2022 Preview used to RnD/remake some things...
 
-# HowTo Make Your Own Experiments
+# How To Make Your Own Experiments
 1. Clone this repo 
-2. Install Angle templates(run Angle\templates\install.bat) and build Angle solution (Angle\winrt\10\gyp\All.sln) separately
-3. Open Bridge.sln
-4. Choose target ARM device
-5. Build
+2. Install Angle templates (run Angle\templates\install.bat) and build Angle solution (Angle\winrt\10\gyp\All.sln) separately
+3. Open AndroidBridge.sln
+4. Choose target Win32 or ARM
+5. Build and explore...
+6. DIY...
 
 -- me 2022
