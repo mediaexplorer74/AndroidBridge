@@ -1,4 +1,21 @@
-// SYSCALL.C
+/*
+ * This file is part of Foreign Linux.
+ *
+ * Copyright (C) 2014, 2015 Xiangyan Sun <wishstudio@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <syscall/mm.h>
 #include <syscall/process.h>
@@ -7,6 +24,7 @@
 #include <syscall/tls.h>
 #include <log.h>
 #include <platform.h>
+
 
 #include <stdint.h>
 #define WIN32_LEAN_AND_MEAN
@@ -127,13 +145,10 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ep)
 		print_debug_info(ep->ContextRecord);
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
-
 	if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
 		return EXCEPTION_CONTINUE_SEARCH;
-	
 	if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_INVALID_HANDLE)
 		return EXCEPTION_CONTINUE_SEARCH;
-	
 	if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
 	{
 #if defined(_M_X64) || defined(_M_IX86)
@@ -181,9 +196,7 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ep)
 #endif
 			/* DEP problem */
 			if (mm_handle_page_fault(code, false))
-			{
 				return EXCEPTION_CONTINUE_EXECUTION;
-			}
 			else
 			{
 				/* The problem may be actually in the next page */
@@ -213,27 +226,20 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ep)
 				else if (*code1 == 0x8b) //others
 				{
 					uint8_t* code2 = code + 2;
-					
 					switch (*code2)
 					{
-
 					case 0x0d:
 						ep->ContextRecord->Ecx = ((char*)__get_tls())[ep->ExceptionRecord->ExceptionInformation[1]];
-						
 						return EXCEPTION_CONTINUE_EXECUTION;
 					case 0x15:
 						ep->ContextRecord->Edx = ((char*)__get_tls())[ep->ExceptionRecord->ExceptionInformation[1]];
-						
 						return EXCEPTION_CONTINUE_EXECUTION;
 					case 0x35:
 						ep->ContextRecord->Esi = ((char*)__get_tls())[ep->ExceptionRecord->ExceptionInformation[1]];
-						
 						return EXCEPTION_CONTINUE_EXECUTION;
 					case 0x3d:
 						ep->ContextRecord->Edi = ((char*)__get_tls())[ep->ExceptionRecord->ExceptionInformation[1]];
-						
 						return EXCEPTION_CONTINUE_EXECUTION;
-					
 					default:
 						break;
 					}
@@ -245,22 +251,14 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ep)
 			/* Read/write problem */
 			log_info("IP: 0x%p", code);
 			bool is_write = (ep->ExceptionRecord->ExceptionInformation[0] == 1);
-
 			if (mm_handle_page_fault((void *)ep->ExceptionRecord->ExceptionInformation[1], is_write))
-			{
 				return EXCEPTION_CONTINUE_EXECUTION;
-			}
-			
 			void *ip = (void *)code;
 
 			//char buf[65536];
 			//mm_get_maps(buf);
 			//log_error("/proc/self/maps:\n %s", buf);
-
-
-			// RnD start 
-            /*
-            if (ip >= &mm_check_read_begin && ip <= &mm_check_read_end)
+/*			if (ip >= &mm_check_read_begin && ip <= &mm_check_read_end)
 			{
 				ep->ContextRecord->Xip = (XWORD)&mm_check_read_fail;
 				log_warning("mm_check_read() failed at location 0x%x", ep->ExceptionRecord->ExceptionInformation[1]);
@@ -278,39 +276,20 @@ static LONG CALLBACK exception_handler(PEXCEPTION_POINTERS ep)
 				log_warning("mm_check_write() failed at location 0x%x", ep->ExceptionRecord->ExceptionInformation[1]);
 				return EXCEPTION_CONTINUE_EXECUTION;
 			}
-            */	
-
-
-			// RnD end
-        }
-		
-		
+*/		}
 		if (ep->ExceptionRecord->ExceptionInformation[0] == 0)
-		{
-			log_error("Page fault (read): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
-		}
+			log_error("Page fault(read): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
 		else if (ep->ExceptionRecord->ExceptionInformation[0] == 1)
-		{
-			log_error("Page fault (write): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
-		}
+			log_error("Page fault(write): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
 		else if (ep->ExceptionRecord->ExceptionInformation[0] == 8)
-		{
-			log_error("Page fault (DEP): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
-		}
+			log_error("Page fault(DEP): %p at %p", ep->ExceptionRecord->ExceptionInformation[1], code);
 
-	}//if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)...
-
-	log_info("!!! Application crashed, dumping debug information:  %p", ep->ExceptionRecord->ExceptionInformation[1]);
-	
-	//Commented to minimize debug info stream...
-	//print_debug_info(ep->ContextRecord);
-	
+	}
+	log_info("Application crashed, dumping debug information...");
+	print_debug_info(ep->ContextRecord);
 	RemoveVectoredExceptionHandler(exception_handler);
-	
 	/* If we come here we're sure to crash, so gracefully close logging */
-	
 	log_shutdown();
-	
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 

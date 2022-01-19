@@ -146,6 +146,7 @@ int _bridge_execve(const char * filename, char ** argv, char ** envp)
 		WaitForSingleObject(pi.hProcess, INFINITE);
 
 		DWORD exit_code;
+
 		GetExitCodeProcess(pi.hProcess, &exit_code);
 
 		DebugLog("Process finished 0x%x\n", exit_code);

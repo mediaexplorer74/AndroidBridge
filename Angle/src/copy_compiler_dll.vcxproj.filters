@@ -6,9 +6,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="angle.gyp"/>
-    <None Include="copy_compiler_dll.bat">
-      <Filter>_excluded_files</Filter>
-    </None>
+    <None Include="angle.gyp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="copy_compiler_dll.bat" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+
 #define DLL_EXPORT
 #include "android/android_init.h"
 #include "dll_init.h"
@@ -33,8 +34,6 @@ extern "C" {
 	char *startup;
 }
 
-
-//flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 {
 	log_init();
@@ -53,10 +52,12 @@ void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 
 	mm_update_brk((void*)0x10000000);
 
-	if (rootDir == NULL)
+	// RnD: L"" <--> NULL
+	if (rootDir == NULL)//(rootDir == L"") // NULL
 	{
-		StorageFolder^ packageFolder = Package::Current->InstalledLocation;
-		Platform::String^ packageFolderPath = Platform::String::Concat(L"\\\\?\\", packageFolder->Path);
+		//RnD: ApplicationData::Current->LocalFolder <-> Package::Current->InstalledLocation
+		StorageFolder^ packageFolder = ApplicationData::Current->LocalFolder;//Package::Current->InstalledLocation;
+		Platform::String^ packageFolderPath = Platform::String::Concat("\\\\?\\", packageFolder->Path);
 		rootDir = packageFolderPath->Data();
 
 	}
@@ -64,19 +65,19 @@ void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 	if (dataDir == NULL)
 	{
 		StorageFolder^ localFolder = ApplicationData::Current->LocalFolder;
-		Platform::String^ localFolderPath = Platform::String::Concat(L"\\\\?\\", localFolder->Path);
+		Platform::String^ localFolderPath = Platform::String::Concat("\\\\?\\", localFolder->Path);
 		dataDir = localFolderPath->Data();
 	}
 
-	DebugLog("[DebugLog] root: %S\n", rootDir);
-	DebugLog("[DebugLog] data: %S\n", dataDir);
+	DebugLog("root: %S\n", rootDir);
+	DebugLog("data: %S\n", dataDir);
 
 	vfs_init(rootDir, dataDir);// L"\\\\?\\.");// C:\\Logs\\archlinux");
 
-	// install system call handler
+
 	install_syscall_handler();
 
-	DebugLog("DebugLog: handler installed\n");
+	DebugLog("handler installed\n");
 
 	sys_mkdir("/data/dalvik-cache", 0777);
 	sys_mkdir("/data/dalvik-cache/arm", 0777);
@@ -85,7 +86,7 @@ void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 
 
 
-}//flinit
+}
 
 
 #define BRIDGE_KERNEL_MAX_ARGS 256
@@ -222,13 +223,12 @@ extern "C" int sys_bind(int sockfd, const struct sockaddr * addr, int addrlen);
 
 extern "C" int sys_unlink(const char * pathname);
 
-// call_main(const wchar_t* moduleName)
+
 void call_main(const wchar_t* moduleName)
 {
 	// initialize property area at first
 	// use write permission (as priviledged init process), because we dont have init process yet
 	HMODULE libc = ::LoadPackagedLibrary(L"libc.dll", 0);
-	
 	if (libc != 0)
 	{
 		__system_property_area_init_type __system_property_area_init = (__system_property_area_init_type)GetProcAddress(libc, "__system_property_area_init"); 
@@ -244,9 +244,7 @@ void call_main(const wchar_t* moduleName)
 		int sock = sys_socket(PF_UNIX, SOCK_STREAM, 0);
 
 		if (sock < 0)
-		{
 			__debugbreak();
-		}
 
 		struct sockaddr_un addr;
 		memset(&addr, 0, sizeof(addr));
@@ -435,7 +433,7 @@ ro.config.low_ram=true
 #        file system at a random point.
 config.pm.disablescan=true*/
 
-		add_property("ro.product.cpu.abilist32", "armeabi-v7a,armeabi"); // armeabi-v7a
+		add_property("ro.product.cpu.abilist32", "armeabi-v7a,armeabi");
 		add_property("ro.product.cpu.abilist", "armeabi-v7a,armeabi");
 		add_property("persist.sys.locale", "en-US");
 
@@ -488,37 +486,23 @@ config.pm.disablescan=true*/
 		add_property("config.disable_bluetooth", "true");
 	}
 
-	//RnD 1
-	// 
-	char *args[] = { "/system/bin/patchoat",
+
+	/*char *args[] = { "/system/bin/patchoat",
 	"--input-image-location=/system/framework/boot.art",
 	"--output-image-file=/data/dalvik-cache/arm/system@framework@boot.art",
 	"--instruction-set=arm",
 	"--base-offset-delta=-7286784" };
-	moduleName = L"patchoat.dll";
-	//
+	moduleName = L"patchoat.dll";*/
 
 
-	// RnD 2
-	/*
-	char *args[] = { "/bin/app_process32",
+	/*char *args[] = { "/bin/app_process32",
 	"-Xzygote",
 	"/system/bin",
 	"--zygote",
-	"--start-system-server" };
-	*/
+	"--start-system-server" };*/
 
-	//{ "/system/bin/dex2oat" --runtime-arg -classpath --runtime-arg /system/framework/am.jar 
-	//  --instruction-set=arm --instruction-set-features=smp,-div,-atomic_ldrd_strd 
-    //  --runtime-arg -Xrelocate --boot-image=/system/framework/boot.art --runtime-arg -Xms64m 
-	//  --runtime-arg -Xmx512m --instruction-set-variant=cortex-a7 
-	//  --instruction-set-features=default --generate-debug-info --dex-file=/system/framework/am.jar 
-	//  --oat-fd=11 --oat-location=/data/dalvik-cache/arm/system@framework@am.jar@classes.dex 
-	//  --compiler-filter=speed"
-	
-	//RnD 3
-	/*
-	char *args[] = { "/system/bin/dex2oat" ,
+	//{ "/system/bin/dex2oat" --runtime-arg -classpath --runtime-arg /system/framework/am.jar --instruction-set=arm --instruction-set-features=smp,-div,-atomic_ldrd_strd --runtime-arg -Xrelocate --boot-image=/system/framework/boot.art --runtime-arg -Xms64m --runtime-arg -Xmx512m --instruction-set-variant=cortex-a7 --instruction-set-features=default --generate-debug-info --dex-file=/system/framework/am.jar --oat-fd=11 --oat-location=/data/dalvik-cache/arm/system@framework@am.jar@classes.dex --compiler-filter=speed"
+	/*char *args[] = { "/system/bin/dex2oat" ,
 		"--instruction-set=arm",
 		"--instruction-set-features=smp,-div,-atomic_ldrd_strd",
 		"--boot-image=/system/framework/boot.art",
@@ -528,30 +512,14 @@ config.pm.disablescan=true*/
 		"--oat-file=/data/dalvik-cache/arm/system@app@EasterEgg@EasterEgg.apk.oat",
 		"--compiler-filter=speed"
 		};
-	moduleName = L"dex2oat.dll"; 
-	*/
+	moduleName = L"dex2oat.dll"; */
 
-	//RnD
-	//moduleName = L"dex2oat.dll";
+	char *args[] = { "/bin/app_process32",
+		"/system/bin",
+		"com.android.commands.am.Am", "start", "com.android.settings/.Settings" };
 
-	//char *args[] = { "/bin/app_process32",
-	//	"/system/bin",
-	//	"com.android.commands.am.Am", "start", "com.android.settings/.Settings" };
 
-	// TODO : solve AV here
-
-	HMODULE app_process;
-	try {
-		app_process = ::LoadPackagedLibrary(moduleName, 0);
-	}
-	catch (...) {
-		// Code that executes when an exception of type
-		// networkIOException is thrown in the try block
-		// ...
-		// Log error message in the exception object
-		//cerr << e.what();
-		//throw;
-	}
+	HMODULE app_process = ::LoadPackagedLibrary(moduleName, 0);
 
 	if (app_process != 0)
 	{
@@ -593,11 +561,8 @@ config.pm.disablescan=true*/
 				dest_size -= len;
 			}
 
-			//RnD
-			
-             // !TODO !
-			/*
-			// Demaged -- memory access violation :(
+
+
 			_module_entry_point(
 #ifdef _M_ARM
 				0, 0, 0, 0, //skip register params on ARM, we need copy all params to stack
@@ -609,8 +574,6 @@ config.pm.disablescan=true*/
 				0);
 				//AT_FLAGS, 0,
 				//AT_NULL, 0);
-			 */
-			
 		}
 	}
 }

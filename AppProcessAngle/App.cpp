@@ -86,23 +86,23 @@ void App::SetWindow(CoreWindow^ window)
 // Initializes scene resources
 void App::Load(Platform::String^ entryPoint)
 {
-	StorageFolder^ localFolder = ApplicationData::Current->LocalFolder;
+    StorageFolder^ packageFolder = ApplicationData::Current->LocalFolder; // =Package::Current->InstalledLocation;
 
-	StorageFolder^ packageFolder = Package::Current->InstalledLocation;
+    StorageFolder^ localFolder = ApplicationData::Current->LocalFolder;
 
-
-	Platform::String^ packageFolderPath = Platform::String::Concat(L"\\\\?\\", packageFolder->Path);
-	Platform::String^ localFolderPath = Platform::String::Concat(L"\\\\?\\", localFolder->Path);
-
+    Platform::String^ packageFolderPath = Platform::String::Concat(L"\\\\?\\", packageFolder->Path);
 	packageFolderPath = Platform::String::Concat(packageFolderPath, L"\\root");
+
+    Platform::String^ localFolderPath = Platform::String::Concat(L"\\\\?\\", localFolder->Path);
+
 
 	flinit(packageFolderPath->Data(), localFolderPath->Data());
 
     RecreateRenderer();
 
 
-	auto workItem = ref new WorkItemHandler(
-		[this](IAsyncAction^ workItem)
+	auto workItem = ref new WorkItemHandler
+    ( [this](IAsyncAction^ workItem)
 	{
 		CWinDebugMonitor m_debugMonitor;
 		std::string strA;
@@ -126,13 +126,14 @@ void App::Load(Platform::String^ entryPoint)
 
 				Platform::String^ pStr = ref new Platform::String(strW.data());
 
-				Windows::ApplicationModel::Core::CoreApplication::MainView->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::Normal, ref new Windows::UI::Core::DispatchedHandler([this, pStr]()
+				Windows::ApplicationModel::Core::CoreApplication::MainView->Dispatcher->RunAsync
+                (Windows::UI::Core::CoreDispatcherPriority::Normal, ref new Windows::UI::Core::DispatchedHandler([this, pStr]()
 				{
 					OutputDebugStringW(pStr->Data());
 
 				}
 				));
-				*/
+                */
 				//RnD end
 			}
 		}
@@ -141,14 +142,12 @@ void App::Load(Platform::String^ entryPoint)
 
 	m_workItem = ThreadPool::RunAsync(workItem, WorkItemPriority::High, WorkItemOptions::TimeSliced);
 
-
-
-	// Research
-	call_main(L"app_process32.dll");
+    // ?
+	//call_main(L"app_process32.dll");
 
 	//RnD start
-	//call_main(L"patchoat.dll");
-	//call_main(L"libtest_syscalls");
+	call_main(L"patchoat.dll");
+	call_main(L"libtest_syscalls");
 	//RnD end 
 
 }

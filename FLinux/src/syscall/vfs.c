@@ -1000,14 +1000,14 @@ DEFINE_SYSCALL(fsync, int, fd)
 
 DEFINE_SYSCALL(fdatasync, int, fd)
 {
-	log_info("[vfs] fdatasync(%d)", fd);
+	log_info("fdatasync(%d)", fd);
 	struct file *f = vfs_get(fd);
 	int r;
 	if (!f)
 		r = -L_EBADF;
 	else if (!f->op_vtable->fsync)
 	{
-		log_error("[vfs] fsync() not implemented for the file.");
+		log_error("fsync() not implemented for the file.");
 		r = -L_EINVAL;
 	}
 	else
@@ -1019,14 +1019,14 @@ DEFINE_SYSCALL(fdatasync, int, fd)
 
 DEFINE_SYSCALL(lseek, int, fd, lx_off_t, offset, int, whence)
 {
-	log_info("[vfs] lseek(%d, %d, %d)", fd, offset, whence);
+	log_info("lseek(%d, %d, %d)", fd, offset, whence);
 	struct file *f = vfs_get(fd);
 	intptr_t r;
 	if (!f)
 		r = -L_EBADF;
 	else if (!f->op_vtable->llseek)
 	{
-		log_error("[vfs] llseek() not implemented for the file.");
+		log_error("llseek() not implemented for the file.");
 		r = -L_EINVAL;
 	}
 	else
@@ -1048,7 +1048,7 @@ DEFINE_SYSCALL(lseek, int, fd, lx_off_t, offset, int, whence)
 DEFINE_SYSCALL(llseek, int, fd, unsigned long, offset_high, unsigned long, offset_low, lx_loff_t *, result, int, whence)
 {
 	lx_loff_t offset = ((uint64_t) offset_high << 32ULL) + offset_low;
-	log_info("[vfs] llseek(%d, %lld, %p, %d)", fd, offset, result, whence);
+	log_info("llseek(%d, %lld, %p, %d)", fd, offset, result, whence);
 	if (!mm_check_write(result, sizeof(lx_loff_t)))
 		return -L_EFAULT;
 	struct file *f = vfs_get(fd);
@@ -1057,7 +1057,7 @@ DEFINE_SYSCALL(llseek, int, fd, unsigned long, offset_high, unsigned long, offse
 		r = -L_EBADF;
 	else if (!f->op_vtable->llseek)
 	{
-		log_error("[vfs] llseek() not implemented for the file.");
+		log_error("llseek() not implemented for the file.");
 		r = -L_EINVAL;
 	}
 	else
@@ -1255,12 +1255,12 @@ int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, i
 		|| (flags & O_LARGEFILE) || (flags & O_NOATIME) || (flags & O_NOCTTY)
 		|| (flags & O_NONBLOCK) || (flags & __O_SYNC) || (flags & __O_TMPFILE))
 	{
-		log_error("[vfs] Unsupported flag combination found.");
+		log_error("Unsupported flag combination found.");
 		//return -L_EINVAL;
 	}
 	if (mode != 0)
 	{
-		log_error("[vfs] mode != 0");
+		log_error("mode != 0");
 		//return -L_EINVAL;
 	}
 	char realpath[PATH_MAX], target[PATH_MAX];
@@ -1270,14 +1270,18 @@ int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, i
 	{
 		if (r < 0)
 			return r;
+
 		struct mount_point mp;
 		char *subpath;
 		if (!find_mountpoint(realpath, &mp, &subpath))
 			return VFS_ERR(-L_ENOENT);
+		
 		struct file_system *fs = mp.fs;
 		int ret = fs->open(&mp, subpath, flags, internal_flags, mode, f, target, PATH_MAX);
+
 		if (ret < 0)
 			return VFS_ERR(ret);
+		
 		if (ret == 0)
 			return 0;
 		else if (ret == 1)

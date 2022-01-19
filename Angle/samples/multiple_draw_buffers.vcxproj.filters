@@ -18,15 +18,11 @@
     <ClCompile Include="multiple_draw_buffers\MultipleDrawBuffers.cpp">
       <Filter>multiple_draw_buffers</Filter>
     </ClCompile>
-    <None Include="samples.gyp"/>
-    <None Include="multiple_draw_buffers\multiple_draw_buffers_copy_fs.glsl">
-      <Filter>multiple_draw_buffers</Filter>
-    </None>
-    <None Include="multiple_draw_buffers\multiple_draw_buffers_fs.glsl">
-      <Filter>multiple_draw_buffers</Filter>
-    </None>
-    <None Include="multiple_draw_buffers\multiple_draw_buffers_vs.glsl">
-      <Filter>multiple_draw_buffers</Filter>
-    </None>
+    <None Include="samples.gyp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="multiple_draw_buffers\multiple_draw_buffers_fs.glsl" />
+    <CustomBuild Include="multiple_draw_buffers\multiple_draw_buffers_copy_fs.glsl" />
+    <CustomBuild Include="multiple_draw_buffers\multiple_draw_buffers_vs.glsl" />
   </ItemGroup>
 </Project>

@@ -36,7 +36,7 @@ GLuint CompileShader(GLenum type, const std::string &source)
         std::vector<GLchar> infoLog(infoLogLength);
         glGetShaderInfoLog(shader, (GLsizei)infoLog.size(), NULL, infoLog.data());
 
-        std::wstring errorMessage = std::wstring(L"[simple renderer] Shader compilation failed: ");
+        std::wstring errorMessage = std::wstring(L"Shader compilation failed: ");
         errorMessage += std::wstring(infoLog.begin(), infoLog.end()); 
 
         throw Exception::CreateException(E_FAIL, ref new Platform::String(errorMessage.c_str()));
@@ -51,7 +51,7 @@ GLuint CompileProgram(const std::string &vsSource, const std::string &fsSource)
 
     if (program == 0)
     {
-        throw Exception::CreateException(E_FAIL, L"[simple renderer] Program creation failed");
+        throw Exception::CreateException(E_FAIL, L"Program creation failed");
     }
 
     GLuint vs = CompileShader(GL_VERTEX_SHADER, vsSource);
@@ -84,7 +84,7 @@ GLuint CompileProgram(const std::string &vsSource, const std::string &fsSource)
         std::vector<GLchar> infoLog(infoLogLength);
         glGetProgramInfoLog(program, (GLsizei)infoLog.size(), NULL, infoLog.data());
 
-        std::wstring errorMessage = std::wstring(L"[simple renderer] Program link failed: ");
+        std::wstring errorMessage = std::wstring(L"Program link failed: ");
         errorMessage += std::wstring(infoLog.begin(), infoLog.end()); 
 
         throw Exception::CreateException(E_FAIL, ref new Platform::String(errorMessage.c_str()));
@@ -93,7 +93,6 @@ GLuint CompileProgram(const std::string &vsSource, const std::string &fsSource)
     return program;
 }
 
-//  SimpleRenderer::SimpleRenderer()
 SimpleRenderer::SimpleRenderer() :
     mWindowWidth(0),
     mWindowHeight(0),

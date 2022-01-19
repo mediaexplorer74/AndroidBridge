@@ -30,41 +30,41 @@ IF %ERRORLEVEL% NEQ 0 (
 REM ---------------------------------------------------------------------------------------------------------
 
 REM ---------------------------------------------------------------------------------------------------------
-REM Install Visual Studio 2017 templates
+REM Install Visual Studio 2022 templates
 REM ---------------------------------------------------------------------------------------------------------
-echo Installing ANGLE's Visual Studio 2017 templates
+echo Installing ANGLE's Visual Studio 2022 templates
 
-IF NOT EXIST "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates" GOTO NOVS2017
-echo    Visual Studio 2017 templates directory found
+IF NOT EXIST "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates" GOTO NOVS2022
+echo    Visual Studio 2022 templates directory found
 
 REM delete any old ANGLE templates
-IF EXIST "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalCoreWindow" (
-echo    Removing old VS2017 UniversalCoreWindow template
-@RD /S /Q "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalCoreWindow"
+IF EXIST "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalCoreWindow" (
+echo    Removing old VS2022 UniversalCoreWindow template
+@RD /S /Q "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalCoreWindow"
 )
-IF EXIST "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalSwapChainPanel" (
-echo    Removing old VS2017 UniversalSwapChainPanel template
-@RD /S /Q "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalSwapChainPanel"
+IF EXIST "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalSwapChainPanel" (
+echo    Removing old VS2022 UniversalSwapChainPanel template
+@RD /S /Q "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Store Apps\Universal Apps\UniversalSwapChainPanel"
 )
-IF EXIST "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Win32\DesktopHelloTriangle" (
+IF EXIST "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Win32\DesktopHelloTriangle" (
 echo    Removing old VS2013 DesktopHelloTriangle template
-@RD /S /Q "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates\Win32\DesktopHelloTriangle"
+@RD /S /Q "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates\Win32\DesktopHelloTriangle"
 )
 
 REM Install new templates
-XCOPY "%~dp08.1" "%userprofile%\Documents\Visual Studio 2017\Templates\ProjectTemplates" /s /d /y > nul
+XCOPY "%~dp08.1" "%userprofile%\Documents\Visual Studio 2022\Templates\ProjectTemplates" /s /d /y > nul
 IF %ERRORLEVEL% NEQ 0 ( 
-    echo    Failed to install templates for Visual Studio 2017.
+    echo    Failed to install templates for Visual Studio 2022.
     echo    See www.github.com/Microsoft/angle/wiki/installing-templates for manual installation steps.
 ) ELSE (
-    echo    Successfully installed latest Visual Studio 2017 templates.
+    echo    Successfully installed latest Visual Studio 2022 templates.
 )
 
-GOTO ENDVS2017
+GOTO ENDVS2022
 
-:NOVS2017
-echo    Visual Studio 2017 template directory not found. Skipped installing VS2013 templates.
-:ENDVS2017
+:NOVS2022
+echo    Visual Studio 2022 template directory not found. Skipped installing VS2013 templates.
+:ENDVS2022
 REM ---------------------------------------------------------------------------------------------------------
 
 REM ---------------------------------------------------------------------------------------------------------

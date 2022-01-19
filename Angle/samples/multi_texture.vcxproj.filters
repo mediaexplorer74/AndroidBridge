@@ -15,12 +15,10 @@
     <ClCompile Include="multi_texture\MultiTexture.cpp">
       <Filter>multi_texture</Filter>
     </ClCompile>
-    <None Include="samples.gyp"/>
-    <None Include="multi_texture\basemap.tga">
-      <Filter>multi_texture</Filter>
-    </None>
-    <None Include="multi_texture\lightmap.tga">
-      <Filter>multi_texture</Filter>
-    </None>
+    <None Include="samples.gyp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="multi_texture\lightmap.tga" />
+    <CustomBuild Include="multi_texture\basemap.tga" />
   </ItemGroup>
 </Project>

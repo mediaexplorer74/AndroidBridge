@@ -43,12 +43,10 @@ void install_breakpoint(void* pcode)
 	}
 }
 
-// __dll_init
 int __dll_init(ModuleInfo32* moduleInfo, uint32_t ul_reason_for_call)
 {
 	LPVOID lpvData;
 	BOOL fIgnore;
-
 
 	char tmp[260];
 	GetModuleFileNameA((HMODULE)moduleInfo->moduleBase, tmp, sizeof(tmp));
@@ -82,7 +80,6 @@ int __dll_init(ModuleInfo32* moduleInfo, uint32_t ul_reason_for_call)
 			{
 				__debugbreak();
 			}
-
 			s_libc_initialized = true;
 
 			SYSTEM_INFO si;
@@ -91,8 +88,7 @@ int __dll_init(ModuleInfo32* moduleInfo, uint32_t ul_reason_for_call)
 			/*CreateProcess()*/
 		}
 
-		// RnD ZONE
-		// start
+		// RnD start
 		if (strstr(tmp, "libc++.dll") != NULL)
 		{
 			//install_breakpoint((void*)(moduleInfo->moduleBase + 0x0068640 + libcxx_offset));
@@ -107,50 +103,49 @@ int __dll_init(ModuleInfo32* moduleInfo, uint32_t ul_reason_for_call)
 			int addr = moduleInfo->moduleBase + 0x00EBCA0 + libart_offset;
 			DebugLog("libart: 0x%x\n", addr);
 		}
-		// end
+		// RnD end 
 
 		typedef void(*InitFunction)();
-		uintptr_t* preInitArray = (uintptr_t*)(moduleInfo->preInitArrayOffset + moduleInfo->moduleBase);
+
+		uintptr_t* preInitArray = 
+			(uintptr_t*)(moduleInfo->preInitArrayOffset + moduleInfo->moduleBase);
+
 		for (int i = 0; i < moduleInfo->preInitArrayCount; i++)
 		{
 
 			InitFunction fn = (InitFunction)(preInitArray[i] + moduleInfo->moduleBase);
 			DebugLog("Calling module preinit constructor 0x%x\n", fn);
 
-			try
-			{
-				fn();
-			}
-			catch (...)
-			{
-			}
+			fn();
 		}
 
-		uintptr_t* initArray = (uintptr_t*)(moduleInfo->initArrayOffset + moduleInfo->moduleBase);
+		//RnD
+		
+		uintptr_t* initArray = 
+			(uintptr_t*)(moduleInfo->initArrayOffset + moduleInfo->moduleBase);
+
 		for (int i = 0; i < moduleInfo->initArrayCount; i++)
 		{
 			
 			InitFunction fn = (InitFunction)(initArray[i] + moduleInfo->moduleBase);
 			DebugLog("Calling module constructor 0x%x\n", fn);
 
-			try
-			{
-				fn();
-			}
-			catch (...)
-			{
-				
-			}
+			fn();
 		}
+		
 
 		ModuleRuntimeInfo mi;
 		mi.handle = moduleInfo->moduleBase;
 		MODULEINFO win_mi;
-		if (GetModuleInformation(
-			GetCurrentProcess(),
-			(HMODULE)mi.handle,
-			&win_mi,
-			sizeof(win_mi))
+		if 
+		(
+			GetModuleInformation
+		    (
+				GetCurrentProcess(),
+				(HMODULE)mi.handle,
+				&win_mi,
+				sizeof(win_mi)
+			)
 		)
 		{
 			mi.moduleStart = win_mi.lpBaseOfDll;
@@ -166,17 +161,16 @@ int __dll_init(ModuleInfo32* moduleInfo, uint32_t ul_reason_for_call)
 		mi.unwindIdxPtr = (void*)(moduleInfo->moduleBase + moduleInfo->unwindIdxOffset);
 		mi.unwindIdxSize = moduleInfo->unwindIdxSize;
 
-
-
 		_modules.push_back(mi);
-	}
+
+	}//if ...DLL_PROCESS_ATTACH
 
 
 	return TRUE;
-}//
+
+}//__dll_init
 
 
-// get_module_name
 int get_module_name(void* ptr, char* name, int size)
 {
 	for (auto &i : _modules)
