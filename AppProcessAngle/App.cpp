@@ -142,12 +142,13 @@ void App::Load(Platform::String^ entryPoint)
 
 	m_workItem = ThreadPool::RunAsync(workItem, WorkItemPriority::High, WorkItemOptions::TimeSliced);
 
-    // ?
-	//call_main(L"app_process32.dll");
+    // RnD 1 start
+	call_main(L"app_process32.dll");
+    // RnD 1 end
 
-	//RnD start
-	call_main(L"patchoat.dll");
-	call_main(L"libtest_syscalls");
+	//RnD 2 start
+	//call_main(L"patchoat.dll");
+	//call_main(L"libtest_syscalls");
 	//RnD end 
 
 }

@@ -23,18 +23,23 @@
 //	PROPERTY	|	?				Auto-Reset				Auto-Reset
 // ----------------------------------------------------------------------------
 
+//
 CWinDebugMonitor::CWinDebugMonitor()
 {
-	if (Initialize() != 0) {
+	if (Initialize() != 0) 
+	{
 		::OutputDebugString(L"CWinDebugMonitor::Initialize failed.\n");
 	}
 }
 
+
+//
 CWinDebugMonitor::~CWinDebugMonitor()
 {
 	Unintialize();
 }
 
+//
 DWORD CWinDebugMonitor::Initialize()
 {
 	DWORD errorCode = 0;
@@ -44,26 +49,30 @@ DWORD CWinDebugMonitor::Initialize()
 
 	// Mutex: DBWin
 	// ---------------------------------------------------------
-	m_hDBWinMutex = ::OpenMutex(
+	m_hDBWinMutex = ::OpenMutex
+	(
 		MUTEX_ALL_ACCESS, 
 		FALSE, 
 		L"DBWinMutex"
 		);
 
-	if (m_hDBWinMutex == NULL) {
+	if (m_hDBWinMutex == NULL) 
+	{
 		errorCode = GetLastError();
 		return errorCode;
 	}
 
 	// Event: buffer ready
 	// ---------------------------------------------------------
-	m_hEventBufferReady = ::OpenEvent(
+	m_hEventBufferReady = ::OpenEvent
+	(
 		EVENT_ALL_ACCESS,
 		FALSE,
 		L"DBWIN_BUFFER_READY"
-		);
+	);
 
-	if (m_hEventBufferReady == NULL) {
+	if (m_hEventBufferReady == NULL) 
+	{
 		m_hEventBufferReady = ::CreateEvent(
 			NULL,
 			FALSE,	// auto-reset
@@ -71,7 +80,8 @@ DWORD CWinDebugMonitor::Initialize()
 			L"DBWIN_BUFFER_READY"
 			);
 
-		if (m_hEventBufferReady == NULL) {
+		if (m_hEventBufferReady == NULL) 
+		{
 			errorCode = GetLastError();
 			return errorCode;
 		}
@@ -79,21 +89,25 @@ DWORD CWinDebugMonitor::Initialize()
 
 	// Event: data ready
 	// ---------------------------------------------------------
-	m_hEventDataReady = ::OpenEvent(
+	m_hEventDataReady = ::OpenEvent
+	(
 		SYNCHRONIZE,
 		FALSE,
 		L"DBWIN_DATA_READY"
-		);
+	);
 
-	if (m_hEventDataReady == NULL) {
-		m_hEventDataReady = ::CreateEvent(
+	if (m_hEventDataReady == NULL) 
+	{
+		m_hEventDataReady = ::CreateEvent
+		(
 			NULL,
 			FALSE,	// auto-reset
 			FALSE,	// initial state: nonsignaled
 			L"DBWIN_DATA_READY"
-			);
+		);
 
-		if (m_hEventDataReady == NULL) {
+		if (m_hEventDataReady == NULL) 
+		{
 			errorCode = GetLastError();
 			return errorCode;
 		}
@@ -101,37 +115,43 @@ DWORD CWinDebugMonitor::Initialize()
 
 	// Shared memory
 	// ---------------------------------------------------------
-	m_hDBMonBuffer = ::OpenFileMapping(
+	m_hDBMonBuffer = ::OpenFileMapping
+	(
 		FILE_MAP_READ,
 		FALSE,
 		L"DBWIN_BUFFER"
-		);
+	);
 
-	if (m_hDBMonBuffer == NULL) {
-		m_hDBMonBuffer = ::CreateFileMapping(
+	if (m_hDBMonBuffer == NULL) 
+	{
+		m_hDBMonBuffer = ::CreateFileMapping
+		(
 			INVALID_HANDLE_VALUE,
 			NULL,
 			PAGE_READWRITE,
 			0,
 			sizeof(struct dbwin_buffer),
 			L"DBWIN_BUFFER"
-			);
+		);
 
-		if (m_hDBMonBuffer == NULL) {
+		if (m_hDBMonBuffer == NULL) 
+		{
 			errorCode = GetLastError();
 			return errorCode;
 		}
 	}
 
-	m_pDBBuffer = (struct dbwin_buffer *)::MapViewOfFile(
+	m_pDBBuffer = (struct dbwin_buffer *)::MapViewOfFile
+	(
 		m_hDBMonBuffer,
 		SECTION_MAP_READ,
 		0,
 		0,
 		0
-		);
+	);
 
-	if (m_pDBBuffer == NULL) {
+	if (m_pDBBuffer == NULL) 
+	{
 		errorCode = GetLastError();
 		return errorCode;
 	}
@@ -141,30 +161,36 @@ DWORD CWinDebugMonitor::Initialize()
 	return errorCode;
 }
 
+//
 void CWinDebugMonitor::Unintialize()
 {
-	if (m_hWinDebugMonitorThread != NULL) {
+	if (m_hWinDebugMonitorThread != NULL) 
+	{
 		m_bWinDebugMonStopped = TRUE;
 		::WaitForSingleObject(m_hWinDebugMonitorThread, INFINITE);
 	}
 
-	if (m_hDBWinMutex != NULL) {
+	if (m_hDBWinMutex != NULL) 
+	{
 		CloseHandle(m_hDBWinMutex);
 		m_hDBWinMutex = NULL;
 	}
 
-	if (m_hDBMonBuffer != NULL) {
+	if (m_hDBMonBuffer != NULL) 
+	{
 		::UnmapViewOfFile(m_pDBBuffer);
 		CloseHandle(m_hDBMonBuffer);
 		m_hDBMonBuffer = NULL;
 	}
 
-	if (m_hEventBufferReady != NULL) {
+	if (m_hEventBufferReady != NULL) 
+	{
 		CloseHandle(m_hEventBufferReady);
 		m_hEventBufferReady = NULL;
 	}
 
-	if (m_hEventDataReady != NULL) {
+	if (m_hEventDataReady != NULL) 
+	{
 		CloseHandle(m_hEventDataReady);
 		m_hEventDataReady = NULL;
 	}
@@ -172,6 +198,7 @@ void CWinDebugMonitor::Unintialize()
 	m_pDBBuffer = NULL;
 }
 
+//
 const char* CWinDebugMonitor::GetDebugString()
 {
 	DWORD ret = 0;
@@ -179,14 +206,15 @@ const char* CWinDebugMonitor::GetDebugString()
 	// wait for data ready
 	ret = ::WaitForSingleObject(m_hEventDataReady, TIMEOUT_WIN_DEBUG);
 
-	if (ret == WAIT_OBJECT_0) {
+	if (ret == WAIT_OBJECT_0) 
+	{
 		return m_pDBBuffer->data;
 	}
 
 	return NULL;
 }
 
-
+//
 void CWinDebugMonitor::BufferReady()
 {
 	// signal buffer ready

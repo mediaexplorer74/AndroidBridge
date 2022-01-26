@@ -363,10 +363,13 @@ void vfs_init(LPCWSTR root_path, LPCWSTR data_path)
 	if (vfs_openat(AT_FDCWD, "/", O_DIRECTORY | O_PATH, 0, 0, &vfs->cwd) < 0)
 	{
 		log_error("Opening initial current directory \"/\" failed.");
-		__debugbreak();
+		//__debugbreak();
 	}
+
 	vfs->umask = S_IWGRP | S_IWOTH;
+	
 	socket_init();
+	
 	log_info("vfs subsystem initialized.");
 }
 
@@ -1099,9 +1102,13 @@ static int resolve_path(const char *dirpath, const char *pathname, char *realpat
 {
 	char target[PATH_MAX];
 	char *realpath_start = realpath;
+	
 	/* ENOENT when pathname is empty (according to Linux) */
 	if (*pathname == 0)
+	{
 		return -L_ENOENT;
+	}
+
 	/* CAUTION: dirpath can be aliased with realpath */
 	if (*pathname == '/')
 	{
@@ -1203,11 +1210,18 @@ static int resolve_path(const char *dirpath, const char *pathname, char *realpat
 			}
 		}
 	}
+
 	if (realpath == realpath_start)
+	{
 		*realpath++ = '/'; /* Return "/" instead of empty string */
+	}
+
 	*realpath = 0;
+	
 	return realpath - realpath_start;
-}
+
+}//
+
 
 /* resolve_path(), *at() version */
 int resolve_pathat(int dirfd, const char *pathname, char *realpath, int *symlink_remain)
@@ -1225,6 +1239,7 @@ int resolve_pathat(int dirfd, const char *pathname, char *realpath, int *symlink
 	return resolve_path(dirpath, pathname, realpath, symlink_remain);
 }
 
+// vfs_openat
 int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, int mode, struct file **f)
 {
 	/*
@@ -1250,6 +1265,7 @@ int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, i
 	* O_WRONLY
 	All filesystem not supporting these flags should explicitly check "flags" parameter
 	*/
+	
 	if ((flags & O_DIRECT)
 		|| (flags & O_DSYNC)
 		|| (flags & O_LARGEFILE) || (flags & O_NOATIME) || (flags & O_NOCTTY)
@@ -1258,14 +1274,17 @@ int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, i
 		log_error("Unsupported flag combination found.");
 		//return -L_EINVAL;
 	}
+	
 	if (mode != 0)
 	{
 		log_error("mode != 0");
 		//return -L_EINVAL;
 	}
+	
 	char realpath[PATH_MAX], target[PATH_MAX];
 	int symlink_remain = MAX_SYMLINK_LEVEL;
 	int r = resolve_pathat(dirfd, pathname, realpath, &symlink_remain);
+	
 	for (;;)
 	{
 		if (r < 0)
@@ -1301,6 +1320,7 @@ int vfs_openat(int dirfd, const char *pathname, int flags, int internal_flags, i
 	}
 }
 
+//
 DEFINE_SYSCALL(openat, int, dirfd, const char *, pathname, int, flags, int, mode)
 {
 	log_info("openat(%d, \"%s\", %x, %x)", dirfd, pathname, flags, mode);

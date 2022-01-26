@@ -30,10 +30,12 @@ using namespace Concurrency;
 using namespace Windows::Storage;
 using namespace Windows::ApplicationModel;
 
-extern "C" {
+extern "C" 
+{
 	char *startup;
 }
 
+// flinit
 void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 {
 	log_init();
@@ -84,9 +86,7 @@ void flinit(const wchar_t* rootDir, const wchar_t* dataDir)
 
 	//"/etc/localtime -> ../usr/share/zoneinfo/UTC";
 
-
-
-}
+}//flinit end
 
 
 #define BRIDGE_KERNEL_MAX_ARGS 256
@@ -229,6 +229,7 @@ void call_main(const wchar_t* moduleName)
 	// initialize property area at first
 	// use write permission (as priviledged init process), because we dont have init process yet
 	HMODULE libc = ::LoadPackagedLibrary(L"libc.dll", 0);
+	
 	if (libc != 0)
 	{
 		__system_property_area_init_type __system_property_area_init = (__system_property_area_init_type)GetProcAddress(libc, "__system_property_area_init"); 
@@ -563,7 +564,8 @@ config.pm.disablescan=true*/
 
 
 
-			_module_entry_point(
+			_module_entry_point
+			(
 #ifdef _M_ARM
 				0, 0, 0, 0, //skip register params on ARM, we need copy all params to stack
 #endif
@@ -571,9 +573,11 @@ config.pm.disablescan=true*/
 				arg_ptrs[0], arg_ptrs[1], arg_ptrs[2], arg_ptrs[3], arg_ptrs[4], //arg_ptrs[5], arg_ptrs[6], arg_ptrs[7], arg_ptrs[8],
 				0,
 				"CLASSPATH=/system/app/EasterEgg/EasterEgg.apk",
-				0);
-				//AT_FLAGS, 0,
-				//AT_NULL, 0);
+				0
+			);
+			//  AT_FLAGS, 0,
+		    //  AT_NULL, 0
+			//);
 		}
 	}
 }

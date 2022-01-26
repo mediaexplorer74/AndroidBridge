@@ -27,14 +27,14 @@
 #include <Windows.h>
 
 /* Windows allocation granularity */
-#ifdef _WIN64
+#ifdef _WIN32//_WIN64
 #define BLOCK_SIZE 0x00010000ULL
 #else
 #define BLOCK_SIZE 0x00010000U
 #endif
 
 /* Page size */
-#ifdef _WIN64
+#ifdef _WIN32//_WIN64
 #define PAGE_SIZE 0x00001000ULL
 #else
 #define PAGE_SIZE 0x00001000U
@@ -44,7 +44,7 @@
 
 #define ALIGN_TO(x, a) ((uintptr_t)((x) + (a) - 1) & ~((a) - 1))
 
-#ifdef _WIN64
+#ifdef _WIN32//_WIN64
 
 /* x64 Special: brk() base address */
 #define MM_BRK_BASE				0x0000000300000000ULL
@@ -72,9 +72,9 @@ void mm_dump_memory_mappings();
 int mm_get_maps(char *buf);
 
 /* Check if the memory region is compatible with desired access */
-int mm_check_read(const void *addr, size_t size);
+int mm_check_read(const void *addr, unsigned __int64 size);
 int mm_check_read_string(const char *addr);
-int mm_check_write(void *addr, size_t size);
+int mm_check_write(void *addr, unsigned __int64 size);
 
 int mm_handle_page_fault(void *addr, bool is_write);
 int mm_fork(HANDLE process);
@@ -82,13 +82,16 @@ void mm_afterfork_parent();
 void mm_afterfork_child();
 
 int mm_write_process_memory(HANDLE process, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize);
-size_t mm_find_free_pages(size_t count_bytes);
+
+//unsigned __int64 mm_find_free_pages(unsigned __int64 count_bytes);
+unsigned __int64 mm_find_free_pages(unsigned __int64 count_bytes);
+
 struct file;
 typedef intptr_t lx_off_t;
-void *mm_mmap(void *addr, size_t len, int prot, int flags, int internal_flags, struct file *f, lx_off_t offset_pages);
-int mm_munmap(void *addr, size_t len);
+void *mm_mmap(void *addr, unsigned __int64 len, int prot, int flags, int internal_flags, struct file *f, lx_off_t offset_pages);
+int mm_munmap(void *addr, unsigned __int64 len);
 
-void *mm_alloc_thread_stack(size_t len, bool guard_page);
+void *mm_alloc_thread_stack(unsigned __int64 len, bool guard_page);
 
 /* Populate a memory region containing given address */
 void mm_populate(void *addr);
@@ -104,4 +107,4 @@ void mm_populate(void *addr);
  * TODO: This scheme is really ugly, any better ideas?
  */
 #define MM_STATIC_ALLOC_SIZE	3 * BLOCK_SIZE	/* The total size */
-void *mm_static_alloc(size_t size);
+void *mm_static_alloc(unsigned __int64 size);

@@ -190,10 +190,13 @@ static int load_elf(struct file *f, struct binfmt *binary)
 	elf->load_base = 0;
 	if (elf->eh.e_type == ET_DYN)
 	{
-		size_t free_addr = mm_find_free_pages(elf->high - elf->low) * PAGE_SIZE;
+		unsigned __int64 free_addr = mm_find_free_pages(elf->high - elf->low) * PAGE_SIZE;
+		
 		if (!free_addr)
 			return -L_ENOMEM;
+
 		elf->load_base = free_addr - elf->low;
+		
 		log_info("ET_DYN load offset: %p, real range [%p, %p)", elf->load_base, elf->load_base + elf->low, elf->load_base + elf->high);
 	}
 

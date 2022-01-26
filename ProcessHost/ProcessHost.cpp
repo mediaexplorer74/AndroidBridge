@@ -8,7 +8,7 @@
 #include "android_init.h"
 extern "C"
 {
-#include "../FLinux/src/ntdll.h"
+#include "../FLinux/ntdll.h"
 }
 
 

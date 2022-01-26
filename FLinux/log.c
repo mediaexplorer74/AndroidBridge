@@ -108,14 +108,15 @@ void log_shutdown()
 
 static void log_internal(int type, char typech, const char *format, va_list ap)
 {
+	/*
 	struct packet *packet = (struct packet*)buffer;
 	packet->type = type;
 	FILETIME tf;
 	SYSTEMTIME ts;
 	win7compat_GetSystemTimePreciseAsFileTime(&tf);
-	/* Convert FILETIME to human readable text */
+	// Convert FILETIME to human readable text 
 	uint64_t time = ((uint64_t)tf.dwHighDateTime << 32ULL) + tf.dwLowDateTime;
-	/* FILETIME is in 100-nanosecond units */
+	// FILETIME is in 100-nanosecond units 
 	uint64_t seconds = (time / 10'000'000ULL);
 	int nano = (int)(time % 10'000'000ULL);
 	int sec = (int)(seconds % 60);
@@ -142,13 +143,14 @@ static void log_internal(int type, char typech, const char *format, va_list ap)
 
 		OutputDebugStringA(packet->text);
 
-		/*if (!WriteFile(hLoggerPipe, packet->text, packet->len, &bytes_written, NULL))
-		{
-			DWORD err = GetLastError();
-			CloseHandle(hLoggerPipe);
-			logger_attached = 0;
-		}*/
+		//if (!WriteFile(hLoggerPipe, packet->text, packet->len, &bytes_written, NULL))
+		//{
+		//	DWORD err = GetLastError();
+		//	CloseHandle(hLoggerPipe);
+		//	logger_attached = 0;
+		//}
 	}
+	*/
 
 }
 
