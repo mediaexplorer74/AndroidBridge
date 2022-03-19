@@ -50,9 +50,8 @@ class SixteenBppTextureTest : public ANGLETest
     {
         ANGLETest::SetUp();
 
-        const std::string vertexShaderSource = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string vertexShaderSource =
+            R"(precision highp float;
             attribute vec4 position;
             varying vec2 texcoord;
 
@@ -60,20 +59,17 @@ class SixteenBppTextureTest : public ANGLETest
             {
                 gl_Position = vec4(position.xy, 0.0, 1.0);
                 texcoord = (position.xy * 0.5) + 0.5;
-            }
-        );
+            })";
 
-        const std::string fragmentShaderSource2D = SHADER_SOURCE
-        (
-            precision highp float;
+        const std::string fragmentShaderSource2D =
+            R"(precision highp float;
             uniform sampler2D tex;
             varying vec2 texcoord;
 
             void main()
             {
                 gl_FragColor = texture2D(tex, texcoord);
-            }
-        );
+            })";
 
         m2DProgram = CompileProgram(vertexShaderSource, fragmentShaderSource2D);
         mTexture2DUniformLocation = glGetUniformLocation(m2DProgram, "tex");
@@ -88,9 +84,6 @@ class SixteenBppTextureTest : public ANGLETest
 
     void simpleValidationBase(GLuint tex)
     {
-        GLuint fbo = 0;
-        glGenFramebuffers(1, &fbo);
-
         // Draw a quad using the texture
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(m2DProgram);
@@ -107,22 +100,11 @@ class SixteenBppTextureTest : public ANGLETest
         EXPECT_PIXEL_COLOR_EQ(0, h, GLColor::blue);
         EXPECT_PIXEL_COLOR_EQ(w, h, GLColor::yellow);
 
-        // Bind the texture as a framebuffer
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-        EXPECT_GL_NO_ERROR();
-        EXPECT_PIXEL_EQ(0, 0, 255, 0, 0, 255);
-        EXPECT_PIXEL_EQ(1, 0, 0, 255, 0, 255);
-        EXPECT_PIXEL_EQ(0, 1, 0, 0, 255, 255);
-        EXPECT_PIXEL_EQ(1, 1, 255, 255, 0, 255);
-
         // Generate mipmaps
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Draw a quad using the texture
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT);
-        glBindTexture(GL_TEXTURE_2D, tex);
         glUseProgram(m2DProgram);
         glUniform1i(mTexture2DUniformLocation, 0);
         drawQuad(m2DProgram, "position", 0.5f);
@@ -319,15 +301,13 @@ TEST_P(SixteenBppTextureTest, RGBA4444Validation)
 // Test uploading RGBA8 data to RGBA4 textures.
 TEST_P(SixteenBppTextureTestES3, RGBA4UploadRGBA8)
 {
-    std::vector<GLColor> fourColors;
-    fourColors.push_back(GLColor::red);
-    fourColors.push_back(GLColor::green);
-    fourColors.push_back(GLColor::blue);
-    fourColors.push_back(GLColor::yellow);
+    const std::array<GLColor, 4> kFourColors = {
+        {GLColor::red, GLColor::green, GLColor::blue, GLColor::yellow}};
 
     GLTexture tex;
     glBindTexture(GL_TEXTURE_2D, tex.get());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA4, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, fourColors.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA4, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 kFourColors.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     ASSERT_GL_NO_ERROR();

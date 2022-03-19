@@ -35,6 +35,7 @@
             ['OS=="linux" and use_x11==1 and chromeos==0',
             {
                 'angle_enable_gl%': 1,
+                'angle_enable_vulkan%': 1,
             }],
             ['OS=="mac"',
             {
@@ -51,7 +52,8 @@
     [
         'compiler.gypi',
         'libGLESv2.gypi',
-        'libEGL.gypi'
+        'libEGL.gypi',
+        'vulkan_support/vulkan.gypi',
     ],
 
     'targets':
@@ -68,7 +70,7 @@
             [
                 '.',
                 '../include',
-                'common/third_party/numerics',
+                'common/third_party/base',
             ],
             'dependencies':
             [
@@ -80,7 +82,7 @@
                 [
                     '<(angle_path)/include',
                     '<(angle_path)/src',
-                    '<(angle_path)/src/common/third_party/numerics',
+                    '<(angle_path)/src/common/third_party/base',
                 ],
                 'conditions':
                 [
@@ -139,7 +141,33 @@
                             ],
                         },
                     },
+                    'sources':
+                    [
+                        '<@(libangle_common_win_sources)',
+                    ],
                 }],
+                ['OS=="mac"',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_common_mac_sources)',
+                    ],
+                    'link_settings':
+                    {
+                        'libraries':
+                        [
+                            '$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
+                            '$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+                        ],
+                    },
+                }],
+                ['OS=="linux"',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_common_linux_sources)',
+                    ],
+                }]
             ],
         },
 
@@ -171,6 +199,144 @@
         },
 
         {
+            'target_name': 'angle_gpu_info_util',
+            'type': 'static_library',
+            'includes': [ '../gyp/common_defines.gypi', ],
+            'sources':
+            [
+                '<@(libangle_gpu_info_util_sources)',
+            ],
+            'include_dirs':
+            [
+                '.',
+                '../include',
+            ],
+            'dependencies':
+            [
+                'angle_common',
+            ],
+            'direct_dependent_settings':
+            {
+                'include_dirs':
+                [
+                    '<(angle_path)/include',
+                    '<(angle_path)/src',
+                ],
+            },
+            'conditions':
+            [
+                ['OS=="win"',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_gpu_info_util_win_sources)',
+                    ],
+                }],
+                ['OS=="win" and angle_build_winrt==0',
+                {
+                    'link_settings':
+                    {
+                        'msvs_settings':
+                        {
+                            'VCLinkerTool':
+                            {
+                                'AdditionalDependencies':
+                                [
+                                    'setupapi.lib'
+                                ]
+                            }
+                        }
+                    },
+                    'defines':
+                    [
+                        'GPU_INFO_USE_SETUPAPI',
+                    ],
+                },
+                {
+                    'link_settings':
+                    {
+                        'msvs_settings':
+                        {
+                            'VCLinkerTool':
+                            {
+                                'AdditionalDependencies':
+                                [
+                                    'dxgi.lib'
+                                ]
+                            }
+                        }
+                    },
+                    'defines':
+                    [
+                        'GPU_INFO_USE_DXGI',
+                    ],
+                }],
+                ['OS=="linux"',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_gpu_info_util_linux_sources)',
+                    ],
+                }],
+                ['OS=="linux" and use_x11==1',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_gpu_info_util_x11_sources)',
+                    ],
+                    'defines':
+                    [
+                        'GPU_INFO_USE_X11',
+                    ],
+                    'dependencies':
+                    [
+                        '<(angle_path)/src/third_party/libXNVCtrl/libXNVCtrl.gyp:libXNVCtrl',
+                    ],
+                    'link_settings':
+                    {
+                        'ldflags':
+                        [
+                            '<!@(<(pkg-config) --libs-only-L --libs-only-other x11 xi xext)',
+                        ],
+                        'libraries':
+                        [
+                            '<!@(<(pkg-config) --libs-only-l x11 xi xext) -ldl',
+                        ],
+                    },
+                }],
+                ['OS=="linux" and use_libpci==1',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_gpu_info_util_libpci_sources)',
+                    ],
+                    'defines':
+                    [
+                        'GPU_INFO_USE_LIBPCI',
+                    ],
+                    'link_settings':
+                    {
+                        'ldflags':
+                        [
+                            '<!@(<(pkg-config) --libs-only-L --libs-only-other libpci)',
+                        ],
+                        'libraries':
+                        [
+                            '<!@(<(pkg-config) --libs-only-l libpci)',
+                        ],
+                    },
+                }],
+                ['OS=="mac"',
+                {
+                    'sources':
+                    [
+                        '<@(libangle_gpu_info_util_mac_sources)',
+                    ],
+                }],
+            ],
+        },
+
+        {
             'target_name': 'copy_scripts',
             'type': 'none',
             'includes': [ '../gyp/common_defines.gypi', ],
@@ -179,7 +345,7 @@
             [
                 {
                     'destination': '<(angle_gen_path)',
-                    'files': [ 'copy_compiler_dll.bat', 'commit_id.bat' ],
+                    'files': [ 'copy_compiler_dll.bat', '<(angle_id_script_base)' ],
                 },
             ],
             'conditions':
@@ -209,12 +375,12 @@
                             'action_name': 'Generate ANGLE Commit ID Header',
                             'message': 'Generating ANGLE Commit ID',
                             # reference the git index as an input, so we rebuild on changes to the index
-                            'inputs': [ '<(angle_gen_path)/commit_id.bat', '<(angle_path)/.git/index' ],
+                            'inputs': [ '<(angle_id_script)', '<(angle_path)/.git/index' ],
                             'outputs': [ '<(angle_id_header)' ],
                             'msvs_cygwin_shell': 0,
                             'action':
                             [
-                                '"<(angle_gen_path)/commit_id.bat"', 'gen', '<(angle_path)', '<(angle_id_header)'
+                                'python', '<(angle_id_script)', 'gen', '<(angle_path)', '<(angle_id_header)'
                             ],
                         },
                     ],

@@ -22,7 +22,7 @@
 #include <common/sigframe.h>
 #include <common/signal.h>
 #include <common/time.h>
-#include <context.h>
+#include <context.h>//<context.h>
 #include <syscall/mm.h>
 #include <syscall/process.h>
 #include <syscall/process_info.h>
@@ -463,22 +463,26 @@ static void signal_save_sigcontext(struct sigcontext *sc, struct syscall_context
 void signal_setup_handler(struct syscall_context *context)
 {
 	int sig = current_thread->current_siginfo.si_signo;
-	uintptr_t sp = context->sp;
-	/* TODO: Make fpstate layout the same as in Linux kernel */
-	/* Allocate fpstate space */
+
+	//TODO
+	/*
+	//uintptr_t sp = context->sp;
+	
+	// TODO: Make fpstate layout the same as in Linux kernel
+	// Allocate fpstate space
 	sp -= sizeof(struct fpstate);
-	/* Align fpstate to 512 byte boundary */
+	// Align fpstate to 512 byte boundary
 	sp = sp & ~(512UL - 1);
 	void *fpstate = (void*)sp;
 	fpu_fxsave(fpstate);
 
-	/* Allocate sigcontext space */
+	// Allocate sigcontext space 
 	sp -= sizeof(struct rt_sigframe);
-	/* align: ((sp + 4) & 15) == 0 */
+	// align: ((sp + 4) & 15) == 0 
 	sp = ((sp + 4) & ~(16UL-1)) - 4;
 
 	struct rt_sigframe *frame = (struct rt_sigframe *)sp;
-	frame->pretcode = (uint32_t)signal->actions[sig].sa_restorer; /* FIXME: fix race */
+	frame->pretcode = (uint32_t)signal->actions[sig].sa_restorer; // FIXME: fix race 
 	if (frame->pretcode == 0)
 		frame->pretcode = (uint32_t)signal_restorer;
 	frame->sig = sig;
@@ -488,23 +492,25 @@ void signal_setup_handler(struct syscall_context *context)
 
 	frame->uc.uc_flags = 0;
 	frame->uc.uc_link = 0;
-	/* TODO: frame->uc.uc_stack */
+	
+    //TODO: frame->uc.uc_stack 
 	EnterCriticalSection(&signal->mutex);
 	frame->uc.uc_sigmask = current_thread->sigmask;
 	signal_save_sigcontext(&frame->uc.uc_mcontext, context, fpstate, (uint32_t)current_thread->sigmask);
 	sigaddset(&current_thread->sigmask, frame->sig);
-	current_thread->sigmask |= signal->actions[sig].sa_mask; /* FIXME: fix race */
+	current_thread->sigmask |= signal->actions[sig].sa_mask; //FIXME: fix race 
 	current_thread->can_accept_signal = true;
 	ResetEvent(current_thread->sigevent);
 	LeaveCriticalSection(&signal->mutex);
-	/* TODO: frame->retcode */
+	//TODO: frame->retcode 
 
-	/* Redirect control flow to handler */
+	// Redirect control flow to handler 
 	context->esp = (DWORD)frame;
-	context->eip = (DWORD)signal->actions[sig].sa_handler; /* FIXME: fix race */
+	context->eip = (DWORD)signal->actions[sig].sa_handler; //FIXME: fix race 
 	context->eax = (DWORD)sig;
 	context->edx = (DWORD)&frame->info;
 	context->ecx = (DWORD)&frame->uc;
+	*/
 }
 
 static void send_packet(HANDLE sigwrite, struct signal_packet *packet)

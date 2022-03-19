@@ -23,7 +23,6 @@
             '-Wextra',
             '-Wformat=2',
             '-Winit-self',
-            '-Wnon-virtual-dtor',
             '-Wno-format-nonliteral',
             '-Wno-unknown-pragmas',
             '-Wno-unused-function',
@@ -32,6 +31,10 @@
             '-Wpointer-arith',
             '-Wundef',
             '-Wwrite-strings',
+        ],
+        'gcc_or_clang_warnings_cc':
+        [
+            '-Wnon-virtual-dtor',
         ],
 
         # TODO: Pull chromium's clang dep.
@@ -74,12 +77,18 @@
                 'msvs_application_type_revision' : '<(angle_build_winrt_app_type_revision)',
                 'msvs_target_platform_version' : '<(angle_build_winrt_target_platform_ver)',
             }],
+            ['angle_build_winrt==0 and OS=="win"',
+            {
+                # Require the version of the Windows 10 SDK installed on the local machine.
+                'msvs_windows_sdk_version': 'v10.0',
+            }],
         ],
         'configurations':
         {
             'Common_Base':
             {
                 'abstract': 1,
+
                 'msvs_configuration_attributes':
                 {
                     'OutputDirectory': '$(SolutionDir)$(ConfigurationName)_$(Platform)',
@@ -111,8 +120,17 @@
                                 # Use '/Wv:18' to avoid WRL warnings in VS2015 Update 3
                                 # Use /Gw and /Zc:threadSafeInit to avoid
                                 # LTCG-related crashes with VS2015 Update 3
-                                'AdditionalOptions': ['/Wv:18', '/Gw', '/Zc:threadSafeInit-'],
-                            }],
+                                'AdditionalOptions': ['/Wv:18', '/Gw', '/Zc:threadSafeInit-', '/IGNORE:4264'],
+                                
+                                # Enabled for now due to possible bug in WRL:
+                                #     error C2220: warning treated as error - no 'object' file generated 
+                                #     C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\vccorlib.h(1333)
+                                #     note: This diagnostic occurred in the compiler generated function 'long Platform::String::__abi_Platform_IDisposable____abi_<Dispose>(void)'
+                                #     5>C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\vccorlib.h(1333):
+                                'ExceptionHandling': '1',
+                                
+                                'CompileAsWinRT': 'false',
+                             }],
                         ],
                     },
                     'VCLinkerTool':
@@ -286,6 +304,7 @@
                         'TargetMachine': '1', # x86
                     },
                 },
+                'defines': [ 'ANGLE_X86_CPU' ],
             }, # x86_Base
 
             'x64_Base':
@@ -303,6 +322,7 @@
                         'TargetMachine': '17', # x86 - 64
                     },
                 },
+                'defines': [ 'ANGLE_X64_CPU' ],
             },    # x64_Base
 
             # Concrete configurations
@@ -431,7 +451,21 @@
                     }],
                     ['OS != "win" and OS != "mac"',
                     {
-                        'cflags': ['<@(gcc_or_clang_warnings)']
+                        'cflags_c':
+                        [
+                            '<@(gcc_or_clang_warnings)',
+                            '-std=c99',
+                        ],
+                        'cflags_cc':
+                        [
+                            '<@(gcc_or_clang_warnings_cc)',
+                        ],
+                        'defines':
+                        [
+                            'SYSCONFDIR="/etc"',
+                            'FALLBACK_CONFIG_DIRS="/etc/xdg"',
+                            'FALLBACK_DATA_DIRS="/usr/local/share:/usr/share"',
+                        ],
                     }],
                     ['clang==1',
                     {
