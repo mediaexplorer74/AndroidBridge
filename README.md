@@ -1,18 +1,18 @@
-# AndroidBridge
+# AndroidBridge 0.10
 
 Android bridge for UWP applications. This project is fork of WallyCZ's AndroidBridge.
 
-My attempt to re-create Project Astoria, or some bridge between A and W worlds.
+This is my little attempt to re-create Project Astoria, or some bridge between A and W worlds.
 
 ## About
 The main goal is run Android Runtime as an UWP app (via Android 7.1 emulation).
 
 
 ## Project status
-- phase 1 Intro/RnD +- 7 /100
-- phase 2 Design - 
-- phase 3 Tech. project -
-- phase 4 Dev. project  -
+- phase 1 Intro/RnD +- 10 /100
+- phase 2 Design +- 
+- phase 3 Tech. project 10 /100 
+- phase 4 Dev. project  1 / 100
 - phase 5 Tests/Intro   -
 
 ## My 2 cents
