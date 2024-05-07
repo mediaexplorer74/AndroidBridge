@@ -42,9 +42,9 @@ I wanted to put down some thank you's here for folks/projects/websites that were
 - [Bridge](https://github.com/DroidOnUWP/Bridge) - Android bridge for UWP applications.
 - [Microsoft](https://github.com/microsoft) - Thanx for all your open-source samples of your great code :)
 
-## License & Copyright
+## Licence & Support
 
-MicroStore is RnD project. AS-IS. No support. Distributed under the MIT License. 
+"Android Bridge" is RnD project only. AS-IS. No support. Distributed under the MIT License. 
 
 ## Contribute!
 There's still a TON of things missing from this proof-of-concept (MVP) and areas of improvement 
@@ -54,5 +54,5 @@ With best wishes,
   [m][e] 2022
 
 
-"Android Bridge" is RnD project only. AS-IS. No support. Distributed under the MIT License.
+
 
